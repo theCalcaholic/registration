@@ -87,9 +87,24 @@ class RegistrationService {
 	/** @var ICrypto */
 	private $crypto;
 
-	public function __construct($appName, MailService $mailService, IL10N $l10n, IURLGenerator $urlGenerator,
-								RegistrationMapper $registrationMapper, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, Defaults $defaults,
-								ISecureRandom $random, IUserSession $us, IRequest $request, ILogger $logger, ISession $session, IProvider $tokenProvider, ICrypto $crypto){
+	public function __construct(
+		$appName, 
+		MailService $mailService, 
+		IL10N $l10n, 
+		IURLGenerator $urlGenerator,
+		RegistrationMapper $registrationMapper, 
+		IUserManager $userManager, 
+		IConfig $config, 
+		IGroupManager $groupManager, 
+		Defaults $defaults,
+		ISecureRandom $random, 
+		IUserSession $us, 
+		IRequest $request, 
+		ILogger $logger, 
+		ISession $session, 
+		IProvider $tokenProvider, 
+		ICrypto $crypto
+	){
 		$this->appName = $appName;
 		$this->mailService = $mailService;
 		$this->l10n = $l10n;
@@ -291,6 +306,12 @@ class RegistrationService {
 			} catch (\Exception $e) {
 				throw new RegistrationException($e->getMessage());
 			}
+		}
+
+		// Disable user if admin approval is required
+		$admin_approval_required = $this->config->getAppValue($this->appName, 'admin_approval_required', "no");
+		if( $admin_approval_required == "yes" ) {
+			$user->setEnabled(false);
 		}
 
 		// Delete pending registration if no client secret is stored

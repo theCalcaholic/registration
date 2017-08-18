@@ -22,9 +22,12 @@ use \OCP\AppFramework\Http\RedirectResponse;
 use \OCP\AppFramework\Controller;
 use OCP\IURLGenerator;
 use \OCP\IL10N;
+use \OPC\IConfig;
 
 class RegisterController extends Controller {
 
+  /** @var IConfig */
+  private $config;
 	/** @var IL10N */
 	private $l10n;
 	/** @var IURLGenerator */
@@ -32,7 +35,9 @@ class RegisterController extends Controller {
 	/** @var RegistrationService */
 	private $registrationService;
 	/** @var MailService */
-	private $mailService;
+  private $mailService;
+  /** @var string */
+  protected $appName;
 
 
 	public function __construct(
@@ -41,13 +46,16 @@ class RegisterController extends Controller {
 		IL10N $l10n,
 		IURLGenerator $urlgenerator,
 		RegistrationService $registrationService,
-		MailService $mailService
-	){
-		parent::__construct($appName, $request);
+    MailService $mailService,
+    IConfig $config
+  ){
+    parent::__construct($appName, $request);
+    $this->appName = $appName;
 		$this->l10n = $l10n;
 		$this->urlgenerator = $urlgenerator;
 		$this->registrationService = $registrationService;
-		$this->mailService = $mailService;
+    $this->mailService = $mailService;
+    $this->config = $config;
 	}
 
 	/**
@@ -147,6 +155,13 @@ class RegisterController extends Controller {
 					'errormsgs' => array($exception->getMessage()),
 					'token' => $token
 				], 'guest');
+		}
+
+		$admin_approval_required = $this->config->getAppValue($this->appName, 'admin_approval_required', "no");
+		if( $admin_approval_required == "yes" ) {
+			return new TemplateResponse('registration', 'message', array('msg' =>
+				"Your account has been successfully created, but it still needs approval from an administrator."
+			), 'guest');
 		}
 
 		return new TemplateResponse('registration', 'message',

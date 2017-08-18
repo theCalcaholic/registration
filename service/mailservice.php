@@ -135,9 +135,14 @@ class MailService {
 			'user' => $username,
 			'sitename' => $this->defaults->getName()
 		];
-		$html_template = new TemplateResponse('registration', 'email.newuser_html', $template_var, 'blank');
+
+		$admin_approval_required = $this->config->getAppValue($this->appName, 'admin_approval_required', "no");
+
+		$html_template_file = $admin_approval_required == "yes" ? 'email.newuser_inactive_html' : 'email.newuser_html';
+		$plaintext_template_file = $admin_approval_required == "yes" ? 'email.newuser_inactive_plaintext' : 'email.newuser_plaintext';
+		$html_template = new TemplateResponse('registration', $html_template_file, $template_var, 'blank');
 		$html_part = $html_template->render();
-		$plaintext_template = new TemplateResponse('registration', 'email.newuser_plaintext', $template_var, 'blank');
+		$plaintext_template = new TemplateResponse('registration', $plaintext_template_file, $template_var, 'blank');
 		$plaintext_part = $plaintext_template->render();
 		$subject = $this->l10n->t('A new user "%s" has created an account on %s', [$username, $this->defaults->getName()]);
 
